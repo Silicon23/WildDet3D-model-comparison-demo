@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Detail - 3D Detection Comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container detail-page">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <a href="index.html" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Gallery
+                </a>
+                <div class="image-info" id="image-info">
+                    <h1 class="header-title">Image <span id="image-id">-</span></h1>
+                    <div class="image-meta">
+                        <span class="badge" id="source-badge">-</span>
+                        <span class="meta-item" id="scene-path">-</span>
+                        <span class="meta-item" id="dimensions">-</span>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" id="btn-prev" title="Previous image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Prev
+                    </button>
+                    <button class="nav-btn" id="btn-next" title="Next image">
+                        Next
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="control-group">
+                <label class="control-checkbox">
+                    <input type="checkbox" id="show-gt">
+                    <span>Show GT Overlay</span>
+                </label>
+                <label class="control-checkbox">
+                    <input type="checkbox" id="show-labels" checked>
+                    <span>Show Labels</span>
+                </label>
+                <label class="control-checkbox">
+                    <input type="checkbox" id="show-3d" checked>
+                    <span>Show 3D Boxes</span>
+                </label>
+                <label class="control-checkbox">
+                    <input type="checkbox" id="show-2d">
+                    <span>Show 2D Boxes</span>
+                </label>
+            </div>
+            <div class="control-group bev-elev-group">
+                <label class="control-label">BEV Elev:</label>
+                <input type="range" id="bev-elev" min="-90" max="90" value="35" step="1">
+                <span class="elev-display" id="elev-display">35</span>
+            </div>
+
+        </div>
+
+        <!-- Row 1: GT (overlay + BEV side by side, full width) -->
+        <main class="comparison-layout">
+            <div class="model-card gt-card" id="panel-GT">
+                <div class="model-card-header">
+                    <span class="model-dot" style="background: #a855f7;"></span>
+                    <span class="model-name">Ground Truth</span>
+                    <span class="det-count" id="count-GT">-</span>
+                    <button class="download-btn" onclick="downloadCard('GT')" title="Download 1200x600">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                </div>
+                <div class="dual-canvas">
+                    <div class="canvas-wrap"><canvas id="canvas-GT"></canvas></div>
+                    <div class="canvas-wrap bev-wrap"><canvas id="bev-GT"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Row 2: 2x2 grid, each cell = overlay + BEV -->
+            <div class="models-grid">
+                <div class="model-card featured" id="panel-SAM3_3D">
+                    <div class="model-card-header">
+                        <span class="model-dot" style="background: #e74c3c;"></span>
+                        <span class="model-name">Molmo3Det (Ours)</span>
+                        <span class="det-count" id="count-SAM3_3D">-</span>
+                        <button class="download-btn" onclick="downloadCard('SAM3_3D')" title="Download 1200x600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="dual-canvas">
+                        <div class="canvas-wrap"><canvas id="canvas-SAM3_3D"></canvas></div>
+                        <div class="canvas-wrap bev-wrap"><canvas id="bev-SAM3_3D"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="model-card" id="panel-GDino3D">
+                    <div class="model-card-header">
+                        <span class="model-dot" style="background: #3b82f6;"></span>
+                        <span class="model-name">GDino3D (3D-MOOD)</span>
+                        <span class="det-count" id="count-GDino3D">-</span>
+                        <button class="download-btn" onclick="downloadCard('GDino3D')" title="Download 1200x600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="dual-canvas">
+                        <div class="canvas-wrap"><canvas id="canvas-GDino3D"></canvas></div>
+                        <div class="canvas-wrap bev-wrap"><canvas id="bev-GDino3D"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="model-card" id="panel-DetAny3D">
+                    <div class="model-card-header">
+                        <span class="model-dot" style="background: #22c55e;"></span>
+                        <span class="model-name">DetAny3D</span>
+                        <span class="det-count" id="count-DetAny3D">-</span>
+                        <button class="download-btn" onclick="downloadCard('DetAny3D')" title="Download 1200x600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="dual-canvas">
+                        <div class="canvas-wrap"><canvas id="canvas-DetAny3D"></canvas></div>
+                        <div class="canvas-wrap bev-wrap"><canvas id="bev-DetAny3D"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="model-card" id="panel-OVMono3D">
+                    <div class="model-card-header">
+                        <span class="model-dot" style="background: #f97316;"></span>
+                        <span class="model-name">OVMono3D-LIFT</span>
+                        <span class="det-count" id="count-OVMono3D">-</span>
+                        <button class="download-btn" onclick="downloadCard('OVMono3D')" title="Download 1200x600">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="dual-canvas">
+                        <div class="canvas-wrap"><canvas id="canvas-OVMono3D"></canvas></div>
+                        <div class="canvas-wrap bev-wrap"><canvas id="bev-OVMono3D"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Keyboard Hints -->
+        <div class="kbd-hints">
+            <kbd>&larr;</kbd> / <kbd>&rarr;</kbd> navigate &middot;
+            <kbd>G</kbd> toggle GT &middot;
+            <kbd>L</kbd> toggle labels &middot;
+            <kbd>3</kbd> toggle 3D boxes &middot;
+            <kbd>2</kbd> toggle 2D boxes
+        </div>
+    </div>
+
+    <script src="js/overlay-renderer.js"></script>
+    <script src="js/bev-renderer.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/detail.js"></script>
+</body>
+</html>
