@@ -1,6 +1,6 @@
 # Data (hosted on HuggingFace)
 data/
-images/
+images
 demo_data.json
 
 # Rendered outputs
