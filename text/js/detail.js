@@ -719,10 +719,12 @@ function drawLabelRaw(ctx, text, x, y, color) {
 function renderAllBEVs(data) {
     var elev = detailState.bevElev;
 
+    var showLabels = detailState.showLabels;
+
     // GT BEV
     var gtBev = detailState.bevRenderers['GT'];
     if (gtBev && data.gt) {
-        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev);
+        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev, showLabels);
     }
 
     // Model BEVs
@@ -732,7 +734,7 @@ function renderAllBEVs(data) {
         var bev = detailState.bevRenderers[model];
         if (!bev) continue;
         var boxes = detailState.filteredPreds[model] || [];
-        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev);
+        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev, showLabels);
     }
 }
 
@@ -813,7 +815,7 @@ function downloadCard(key) {
         this.canvas.width = DL_SIZE;
         this.canvas.height = DL_SIZE;
     };
-    tempBev.render(boxes, color, detailState.bevElev);
+    tempBev.render(boxes, color, detailState.bevElev, detailState.showLabels);
 
     outCtx.drawImage(bevCanvas, overlayW, 0);
 

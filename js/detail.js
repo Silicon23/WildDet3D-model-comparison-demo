@@ -23,7 +23,7 @@ var detailState = {
     bevRenderers: {},
     loadedImage: null,
     showGT: false,
-    showLabels: true,
+    showLabels: false,
     show3D: true,
     show2D: false,
     activeModels: new Set(['SAM3_3D', 'DetAny3D', 'OVMono3D']),
@@ -529,7 +529,7 @@ function renderGT2DCard(data) {
         renderer.renderBoxes(data.gt, MODEL_COLORS.GT, {
             show3D: false,
             show2D: true,
-            showLabels: detailState.showLabels,
+            showLabels: true,
             isGT: true,
             solidBox: true
         });
@@ -772,11 +772,12 @@ function drawLabelRaw(ctx, text, x, y, color) {
 
 function renderAllBEVs(data) {
     var elev = detailState.bevElev;
+    var showLabels = detailState.showLabels;
 
     // GT BEV
     var gtBev = detailState.bevRenderers['GT'];
     if (gtBev && data.gt) {
-        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev);
+        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev, showLabels);
     }
 
     // Model BEVs
@@ -786,7 +787,7 @@ function renderAllBEVs(data) {
         var bev = detailState.bevRenderers[model];
         if (!bev) continue;
         var boxes = detailState.matchedPreds[model] || [];
-        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev);
+        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev, showLabels);
     }
 }
 
@@ -923,7 +924,7 @@ function downloadCard(key) {
         this.canvas.width = DL_SIZE;
         this.canvas.height = DL_SIZE;
     };
-    tempBev.render(boxes, color, detailState.bevElev);
+    tempBev.render(boxes, color, detailState.bevElev, detailState.showLabels);
 
     outCtx.drawImage(bevCanvas, overlayW, 0);
 

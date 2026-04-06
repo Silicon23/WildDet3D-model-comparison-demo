@@ -37,9 +37,11 @@ class BEVRenderer {
      * boxes: array of {bbox3D_cam, center_cam, dimensions, yaw, category}
      * color: hex color string
      * elevDeg: camera elevation in degrees (default 35)
+     * showLabels: whether to draw category labels (default true)
      */
-    render(boxes, color, elevDeg) {
+    render(boxes, color, elevDeg, showLabels) {
         if (elevDeg === undefined) elevDeg = 35;
+        if (showLabels === undefined) showLabels = true;
         this._resizeCanvas();
         var ctx = this.ctx;
         var w = this.canvas.width;
@@ -116,9 +118,11 @@ class BEVRenderer {
         for (var i = 0; i < boxItems.length; i++) {
             this._drawBox3D(boxItems[i].corners, viewMat, K, w, h, color);
         }
-        for (var i = 0; i < boxItems.length; i++) {
-            if (boxItems[i].label) {
-                this._drawLabel(boxItems[i].corners, boxItems[i].label, viewMat, K, w, h, color);
+        if (showLabels) {
+            for (var i = 0; i < boxItems.length; i++) {
+                if (boxItems[i].label) {
+                    this._drawLabel(boxItems[i].corners, boxItems[i].label, viewMat, K, w, h, color);
+                }
             }
         }
     }

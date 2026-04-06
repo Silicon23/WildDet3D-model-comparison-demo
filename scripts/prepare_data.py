@@ -33,15 +33,15 @@ ANN_PATH = os.path.join(
 
 CATMAP_CONFIG_PATH = os.path.join(
     PROJECT_ROOT,
-    "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/"
-    "2026-03-23_21-02-01/config_2026-03-23_21-02-01.yaml",
+    "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_canonical/"
+    "2026-04-06_14-04-43/config_2026-04-06_14-04-43.yaml",
 )
 
 PRED_PATHS = {
     "SAM3_3D": os.path.join(
         PROJECT_ROOT,
-        "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/"
-        "2026-03-23_21-02-01/eval/detection_bbox/3D/detect_3D_results.json",
+        "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_canonical/"
+        "2026-04-06_14-04-43/eval/detection_bbox/3D/detect_3D_results.json",
     ),
     "DetAny3D": os.path.join(
         PROJECT_ROOT,
@@ -391,8 +391,8 @@ def main():
                         for pt in bbox3D
                     ]
 
-                # WildDet3D uses eval-config cat_map; others use annotation cat_map
-                pred_cat_map = model_id_to_name if model_name == "SAM3_3D" else cat_id_to_name
+                # All box-prompted models use annotation cat_map
+                pred_cat_map = cat_id_to_name
                 boxes.append({
                     "category": pred_cat_map.get(
                         p["category_id"], f"id_{p['category_id']}"

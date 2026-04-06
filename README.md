@@ -33,8 +33,9 @@ Output goes to `comparison_renders/`.
 
 ## Prediction Filtering
 
-- **WildDet3D**: No filtering applied (oracle/box-prompt mode produces one output per GT prompt, no duplicates).
-- **DetAny3D, OVMono3D**: Predictions matched to GT boxes using IoU >= 0.2. For each GT box, the highest-scoring prediction with sufficient overlap is kept (at most 1 per GT).
+- **WildDet3D**: Spurious predictions filtered by 2D IoU >= 0.5 with GT boxes (oracle mode should produce one output per prompt, but occasionally generates extras).
+- **DetAny3D, OVMono3D**: No additional filtering (oracle/box-prompt mode, one output per GT prompt).
+- **Category labels**: All box-prompted models use the annotation file's category mapping (`cat_id_to_name`), since the model's predicted category_id corresponds to the GT prompt's category in the annotation vocabulary.
 
 ## BEV Rendering
 
@@ -77,7 +78,7 @@ The BEV panel uses **manual 3D perspective projection** (no GPU required):
 
 | Model | Prediction Path |
 |---|---|
-| WildDet3D | `vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/2026-03-23_21-02-01/eval/detection_bbox/3D/detect_3D_results.json` |
+| WildDet3D | `vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_canonical/2026-04-06_14-04-43/eval/detection_bbox/3D/detect_3D_results.json` |
 | DetAny3D | `DetAny3D/exps/in_the_wild_v3_eval/0405-121148/in_the_wild_in_the_wild_v3_predictions.json` |
 | OVMono3D | `output/ovmono3d_itw_v3_oracle_predictions.json` |
 
