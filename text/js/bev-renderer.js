@@ -38,10 +38,12 @@ class BEVRenderer {
      * color: hex color string
      * elevDeg: camera elevation in degrees (default 35)
      * showLabels: whether to draw category labels (default true)
+     * showConfidence: whether to append confidence scores (default false)
      */
-    render(boxes, color, elevDeg, showLabels) {
+    render(boxes, color, elevDeg, showLabels, showConfidence) {
         if (elevDeg === undefined) elevDeg = 35;
         if (showLabels === undefined) showLabels = true;
+        if (showConfidence === undefined) showConfidence = false;
         this._resizeCanvas();
         var ctx = this.ctx;
         var w = this.canvas.width;
@@ -56,7 +58,12 @@ class BEVRenderer {
             var corners = this._getCornersDisplay(boxes[i]);
             if (corners) {
                 validBoxes.push(corners);
-                labels.push(boxes[i].category || '');
+                var parts = [];
+                if (showLabels) parts.push(boxes[i].category || '');
+                if (showConfidence && boxes[i].score !== undefined && boxes[i].score !== null) {
+                    parts.push(boxes[i].score.toFixed(2));
+                }
+                labels.push(parts.join(' '));
             }
         }
 
@@ -118,7 +125,7 @@ class BEVRenderer {
         for (var i = 0; i < boxItems.length; i++) {
             this._drawBox3D(boxItems[i].corners, viewMat, K, w, h, color);
         }
-        if (showLabels) {
+        if (showLabels || showConfidence) {
             for (var i = 0; i < boxItems.length; i++) {
                 if (boxItems[i].label) {
                     this._drawLabel(boxItems[i].corners, boxItems[i].label, viewMat, K, w, h, color);

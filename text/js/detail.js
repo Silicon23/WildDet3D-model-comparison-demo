@@ -30,6 +30,7 @@ var detailState = {
     loadedImage: null,
     showGT: false,
     showLabels: true,
+    showConfidence: false,
     show3D: true,
     show2D: false,
     activeModels: new Set(['SAM3_3D', 'GDino3D']),
@@ -213,6 +214,14 @@ function setupControls() {
         box2dCheck.checked = detailState.show2D;
         box2dCheck.addEventListener('change', function () {
             detailState.show2D = box2dCheck.checked;
+            rerenderAllCards();
+        });
+    }
+    var confCheck = document.getElementById('show-confidence');
+    if (confCheck) {
+        confCheck.checked = detailState.showConfidence;
+        confCheck.addEventListener('change', function () {
+            detailState.showConfidence = confCheck.checked;
             rerenderAllCards();
         });
     }
@@ -543,6 +552,7 @@ function renderModelCard(modelName, data) {
         show3D: detailState.show3D,
         show2D: detailState.show2D,
         showLabels: detailState.showLabels,
+        showConfidence: detailState.showConfidence,
         scoreThreshold: 0,
         isGT: false
     });
@@ -718,13 +728,13 @@ function drawLabelRaw(ctx, text, x, y, color) {
 
 function renderAllBEVs(data) {
     var elev = detailState.bevElev;
-
     var showLabels = detailState.showLabels;
+    var showConf = detailState.showConfidence;
 
-    // GT BEV
+    // GT BEV (no confidence)
     var gtBev = detailState.bevRenderers['GT'];
     if (gtBev && data.gt) {
-        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev, showLabels);
+        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev, showLabels, false);
     }
 
     // Model BEVs
@@ -734,7 +744,7 @@ function renderAllBEVs(data) {
         var bev = detailState.bevRenderers[model];
         if (!bev) continue;
         var boxes = detailState.filteredPreds[model] || [];
-        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev, showLabels);
+        bev.render(boxes, CONFIG.MODEL_COLORS[model], elev, showLabels, showConf);
     }
 }
 
@@ -815,7 +825,8 @@ function downloadCard(key) {
         this.canvas.width = DL_SIZE;
         this.canvas.height = DL_SIZE;
     };
-    tempBev.render(boxes, color, detailState.bevElev, detailState.showLabels);
+    var dlShowConf = (key !== 'GT') ? detailState.showConfidence : false;
+    tempBev.render(boxes, color, detailState.bevElev, detailState.showLabels, dlShowConf);
 
     outCtx.drawImage(bevCanvas, overlayW, 0);
 
@@ -895,9 +906,13 @@ function _drawBoxesOnCtx(ctx, boxes, color, sx, sy, offX, offY, isGT) {
             ctx.setLineDash([]);
         }
 
-        // Draw label
-        if (detailState.showLabels) {
-            var labelText = box.category || 'unknown';
+        // Draw label and/or confidence
+        var _showConf = !isGT && detailState.showConfidence;
+        if (detailState.showLabels || _showConf) {
+            var _parts = [];
+            if (detailState.showLabels) _parts.push(box.category || 'unknown');
+            if (_showConf && box.score !== undefined && box.score !== null) _parts.push(box.score.toFixed(2));
+            var labelText = _parts.join(' ');
             var lx, ly;
             if (box.bbox3D_proj && box.bbox3D_proj.length === 8) {
                 var minPy = Infinity, minPx = 0;

@@ -529,7 +529,7 @@ function renderGT2DCard(data) {
         renderer.renderBoxes(data.gt, MODEL_COLORS.GT, {
             show3D: false,
             show2D: true,
-            showLabels: true,
+            showLabels: detailState.showLabels,
             isGT: true,
             solidBox: true
         });

@@ -239,6 +239,7 @@ class OverlayRenderer {
         var show3D = options.show3D !== false;
         var show2D = options.show2D !== false;
         var showLabels = options.showLabels !== false;
+        var showConfidence = options.showConfidence || false;
         var scoreThreshold = options.scoreThreshold || 0;
         var isGT = options.isGT || false;
 
@@ -260,9 +261,14 @@ class OverlayRenderer {
                 this.draw2DBox(box.bbox2D, color, isGT ? 1 : 1.5);
             }
 
-            // Draw label
-            if (showLabels) {
-                var labelText = box.category || 'unknown';
+            // Draw label and/or confidence
+            if (showLabels || (!isGT && showConfidence)) {
+                var parts = [];
+                if (showLabels) parts.push(box.category || 'unknown');
+                if (!isGT && showConfidence && box.score !== undefined && box.score !== null) {
+                    parts.push(box.score.toFixed(2));
+                }
+                var labelText = parts.join(' ');
 
                 // Position label at top-left of 2D box or first 3D corner
                 var labelX = 0;
