@@ -10,26 +10,27 @@
 // ============================================================================
 
 const CONFIG = {
-    DATA_BASE: 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/data',
-    IMAGE_BASE: 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/',
+    DATA_BASE: window.location.hostname.endsWith('github.io')
+        ? 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/box'
+        : 'data/box',
+    IMAGE_BASE: window.location.hostname.endsWith('github.io')
+        ? 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/'
+        : '',
     IMAGES_PER_PAGE: 24,
-    MODELS: ['SAM3_3D', 'GDino3D', 'DetAny3D', 'OVMono3D'],
+    MODELS: ['SAM3_3D', 'DetAny3D', 'OVMono3D'],
     MODEL_DISPLAY: {
-        SAM3_3D: 'Molmo3Det (Ours)',
-        GDino3D: 'GDino3D (3D-MOOD)',
+        SAM3_3D: 'WildDet3D (Ours)',
         DetAny3D: 'DetAny3D',
         OVMono3D: 'OVMono3D-LIFT',
     },
     MODEL_COLORS: {
         SAM3_3D: '#e74c3c',
-        GDino3D: '#3b82f6',
         DetAny3D: '#22c55e',
         OVMono3D: '#f97316',
         GT: '#a855f7',
     },
     MODEL_SHORT: {
-        SAM3_3D: 'M',
-        GDino3D: 'G',
+        SAM3_3D: 'W',
         DetAny3D: 'D',
         OVMono3D: 'O',
     },

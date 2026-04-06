@@ -76,31 +76,45 @@
 
         </div>
 
-        <!-- Row 1: GT (overlay + BEV side by side, full width) -->
+        <!-- Row 1: GT 2D boxes (prompts), full width, no BEV -->
         <main class="comparison-layout">
-            <div class="model-card gt-card" id="panel-GT">
+            <div class="model-card gt-prompt-card" id="panel-GT-2D">
                 <div class="model-card-header">
                     <span class="model-dot" style="background: #a855f7;"></span>
-                    <span class="model-name">Ground Truth</span>
-                    <span class="det-count" id="count-GT">-</span>
-                    <button class="download-btn" onclick="downloadCard('GT')" title="Download 1200x600">
+                    <span class="model-name">2D Box Prompts (GT)</span>
+                    <span class="det-count" id="count-GT-2D">-</span>
+                    <button class="download-btn" onclick="downloadCard('GT-2D')" title="Download">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </button>
                 </div>
-                <div class="dual-canvas">
-                    <div class="canvas-wrap"><canvas id="canvas-GT"></canvas></div>
-                    <div class="canvas-wrap bev-wrap"><canvas id="bev-GT"></canvas></div>
+                <div class="canvas-wrap">
+                    <canvas id="canvas-GT-2D"></canvas>
                 </div>
             </div>
 
-            <!-- Row 2: 2x2 grid, each cell = overlay + BEV -->
+            <!-- Row 2: 2x2 grid (GT 3D + 3 models), each cell = overlay + BEV -->
             <div class="models-grid">
+                <div class="model-card" id="panel-GT">
+                    <div class="model-card-header">
+                        <span class="model-dot" style="background: #a855f7;"></span>
+                        <span class="model-name">Ground Truth 3D</span>
+                        <span class="det-count" id="count-GT">-</span>
+                        <button class="download-btn" onclick="downloadCard('GT')" title="Download">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                    <div class="dual-canvas">
+                        <div class="canvas-wrap"><canvas id="canvas-GT"></canvas></div>
+                        <div class="canvas-wrap bev-wrap"><canvas id="bev-GT"></canvas></div>
+                    </div>
+                </div>
+
                 <div class="model-card featured" id="panel-SAM3_3D">
                     <div class="model-card-header">
                         <span class="model-dot" style="background: #e74c3c;"></span>
-                        <span class="model-name">Molmo3Det (Ours)</span>
+                        <span class="model-name">WildDet3D (Ours)</span>
                         <span class="det-count" id="count-SAM3_3D">-</span>
-                        <button class="download-btn" onclick="downloadCard('SAM3_3D')" title="Download 1200x600">
+                        <button class="download-btn" onclick="downloadCard('SAM3_3D')" title="Download">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
                     </div>
@@ -110,27 +124,12 @@
                     </div>
                 </div>
 
-                <div class="model-card" id="panel-GDino3D">
-                    <div class="model-card-header">
-                        <span class="model-dot" style="background: #3b82f6;"></span>
-                        <span class="model-name">GDino3D (3D-MOOD)</span>
-                        <span class="det-count" id="count-GDino3D">-</span>
-                        <button class="download-btn" onclick="downloadCard('GDino3D')" title="Download 1200x600">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        </button>
-                    </div>
-                    <div class="dual-canvas">
-                        <div class="canvas-wrap"><canvas id="canvas-GDino3D"></canvas></div>
-                        <div class="canvas-wrap bev-wrap"><canvas id="bev-GDino3D"></canvas></div>
-                    </div>
-                </div>
-
                 <div class="model-card" id="panel-DetAny3D">
                     <div class="model-card-header">
                         <span class="model-dot" style="background: #22c55e;"></span>
                         <span class="model-name">DetAny3D</span>
                         <span class="det-count" id="count-DetAny3D">-</span>
-                        <button class="download-btn" onclick="downloadCard('DetAny3D')" title="Download 1200x600">
+                        <button class="download-btn" onclick="downloadCard('DetAny3D')" title="Download">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
                     </div>
@@ -145,7 +144,7 @@
                         <span class="model-dot" style="background: #f97316;"></span>
                         <span class="model-name">OVMono3D-LIFT</span>
                         <span class="det-count" id="count-OVMono3D">-</span>
-                        <button class="download-btn" onclick="downloadCard('OVMono3D')" title="Download 1200x600">
+                        <button class="download-btn" onclick="downloadCard('OVMono3D')" title="Download">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
                     </div>

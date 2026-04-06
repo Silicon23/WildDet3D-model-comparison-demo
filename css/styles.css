@@ -864,14 +864,19 @@ button {
     flex-direction: column;
 }
 
-/* 2x2 grid for the 4 model cards */
+/* 2x2 grid for GT 3D + 3 model cards */
 .models-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-md);
 }
 
-/* Featured card (Molmo3Det) */
+/* GT 2D prompt card (full width, no BEV) */
+.gt-prompt-card .canvas-wrap {
+    aspect-ratio: 16 / 7;
+}
+
+/* Featured card (WildDet3D) */
 .model-card.featured {
     border: 2px solid #e74c3c;
     box-shadow: 0 0 16px rgba(231, 76, 60, 0.25),

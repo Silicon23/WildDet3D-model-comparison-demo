@@ -13,6 +13,7 @@ Usage:
 import json
 import math
 import os
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -24,10 +25,16 @@ from tqdm import tqdm
 # ============================================================================
 
 PROJECT_ROOT = "/weka/oe-training-default/weikaih/3d_boundingbox_detection/Foundation3DDet/sam3_da3/Foundation3DDet"
-OUTPUT_DIR = Path(PROJECT_ROOT) / "visualization_scripts/demo_comparison_v3/data"
+OUTPUT_DIR = Path(PROJECT_ROOT) / "visualization_scripts/demo_comparison_v3/data/box"
 
 ANN_PATH = os.path.join(
     PROJECT_ROOT, "data/in_the_wild/annotations/InTheWild_v3_val.json"
+)
+
+CATMAP_CONFIG_PATH = os.path.join(
+    PROJECT_ROOT,
+    "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/"
+    "2026-03-23_21-02-01/config_2026-03-23_21-02-01.yaml",
 )
 
 PRED_PATHS = {
@@ -36,19 +43,14 @@ PRED_PATHS = {
         "vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/"
         "2026-03-23_21-02-01/eval/detection_bbox/3D/detect_3D_results.json",
     ),
-    "GDino3D": os.path.join(
-        PROJECT_ROOT,
-        "vis4d-workspace/gdino3d_swin-t_in_the_wild_v3/"
-        "2026-03-23_00-51-40/eval/detection_bbox/3D/detect_3D_results.json",
-    ),
     "DetAny3D": os.path.join(
         PROJECT_ROOT,
-        "DetAny3D/exps/in_the_wild_v3_eval/0323-003209/"
+        "DetAny3D/exps/in_the_wild_v3_eval/0405-121148/"
         "in_the_wild_in_the_wild_v3_predictions.json",
     ),
     "OVMono3D": os.path.join(
         PROJECT_ROOT,
-        "output/ovmono3d_itw_v3_predictions.json",
+        "output/ovmono3d_itw_v3_oracle_predictions.json",
     ),
 }
 
@@ -81,12 +83,72 @@ SCENE_FILES = [
 
 TOP_K = 50
 SCORE_THRESHOLD = 0.05
-MODELS = ["SAM3_3D", "GDino3D", "DetAny3D", "OVMono3D"]
+MODELS = ["SAM3_3D", "DetAny3D", "OVMono3D"]
 
 
 # ============================================================================
 # Utilities
 # ============================================================================
+
+
+def load_model_id_to_name(config_yaml_path):
+    """Extract {category_id: name} from an eval config's embedded cat_map.
+
+    The vis4d config YAML contains a cat_map block with name: id entries
+    that covers the full ITW vocab used when predictions were generated.
+    This is the authoritative mapping for saved category_id values.
+    """
+    with open(config_yaml_path) as f:
+        content = f.read()
+
+    name_to_id = {}
+    plain_pat = re.compile(
+        r"^(\s{18,})([A-Za-z][\w \-/,.()]+): (\d+)\s*$"
+    )
+    quoted_pat = re.compile(
+        r"^(\s{18,})'([^']+)': (\d+)\s*$"
+    )
+    for line in content.split("\n"):
+        m = quoted_pat.match(line) or plain_pat.match(line)
+        if m:
+            name = m.group(2)
+            val = int(m.group(3))
+            if val > 2000:
+                continue
+            if name not in name_to_id:
+                name_to_id[name] = val
+
+    return {v: k for k, v in name_to_id.items()}
+
+
+def compute_iou_2d(box_a, box_b):
+    """IoU between two [x1,y1,x2,y2] boxes."""
+    x1 = max(box_a[0], box_b[0])
+    y1 = max(box_a[1], box_b[1])
+    x2 = min(box_a[2], box_b[2])
+    y2 = min(box_a[3], box_b[3])
+    inter = max(0, x2 - x1) * max(0, y2 - y1)
+    area_a = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
+    area_b = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
+    union = area_a + area_b - inter
+    return inter / union if union > 0 else 0
+
+
+def filter_by_gt_iou(pred_boxes, gt_boxes, iou_thr=0.5):
+    """Keep only predictions whose 2D box has IoU >= iou_thr with any GT box."""
+    if not gt_boxes:
+        return []
+    gt_2d_list = [g["bbox2D"] for g in gt_boxes if g.get("bbox2D")]
+    result = []
+    for p in pred_boxes:
+        p_2d = p.get("bbox2D")
+        if not p_2d or len(p_2d) < 4:
+            continue
+        for gt_2d in gt_2d_list:
+            if compute_iou_2d(p_2d, gt_2d) >= iou_thr:
+                result.append(p)
+                break
+    return result
 
 
 def project_3d_to_2d(bbox3D, K):
@@ -212,6 +274,11 @@ def main():
     img_id_to_info = {img["id"]: img for img in ann_data["images"]}
     cat_id_to_name = {cat["id"]: cat["name"] for cat in ann_data["categories"]}
 
+    # Load authoritative category mapping from eval config for predictions
+    print("Loading model category mapping from eval config...")
+    model_id_to_name = load_model_id_to_name(CATMAP_CONFIG_PATH)
+    print(f"  Loaded {len(model_id_to_name)} categories from config")
+
     # GT by image
     gt_by_image = defaultdict(list)
     for ann in ann_data["annotations"]:
@@ -242,7 +309,7 @@ def main():
         for iid in by_img:
             by_img[iid].sort(key=lambda x: x.get("score", 0), reverse=True)
             if model_name == "SAM3_3D":
-                # Molmo3Det has built-in filtering, keep all predictions
+                # WildDet3D has built-in filtering, keep all predictions
                 by_img[iid] = by_img[iid][:TOP_K]
             else:
                 above = [p for p in by_img[iid] if p.get("score", 0) >= SCORE_THRESHOLD]
@@ -324,8 +391,10 @@ def main():
                         for pt in bbox3D
                     ]
 
+                # WildDet3D uses eval-config cat_map; others use annotation cat_map
+                pred_cat_map = model_id_to_name if model_name == "SAM3_3D" else cat_id_to_name
                 boxes.append({
-                    "category": cat_id_to_name.get(
+                    "category": pred_cat_map.get(
                         p["category_id"], f"id_{p['category_id']}"
                     ),
                     "score": round(p.get("score", 0), 3),
@@ -337,6 +406,9 @@ def main():
                     "yaw": yaw_from_R(R_cam) if R_cam else 0.0,
                     "depth": round(depth, 2) if depth else None,
                 })
+            # WildDet3D: filter out spurious boxes that don't match any GT
+            if model_name == "SAM3_3D":
+                boxes = filter_by_gt_iou(boxes, gt_boxes, iou_thr=0.5)
             model_boxes[model_name] = boxes
             model_counts[model_name] = len(boxes)
 

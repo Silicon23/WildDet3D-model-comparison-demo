@@ -8,7 +8,6 @@
 
 const MODEL_COLORS = {
     SAM3_3D: '#e74c3c',
-    GDino3D: '#3b82f6',
     DetAny3D: '#22c55e',
     OVMono3D: '#f97316',
     GT: '#a855f7'
@@ -155,10 +154,11 @@ class OverlayRenderer {
     }
 
     /**
-     * Draw a 2D bounding box with dashed lines.
+     * Draw a 2D bounding box.
      * bbox2D: [x1, y1, x2, y2] in original image coordinates.
+     * solid: if true, draw solid lines; otherwise dashed.
      */
-    draw2DBox(bbox2D, color, lineWidth) {
+    draw2DBox(bbox2D, color, lineWidth, solid) {
         if (!bbox2D || bbox2D.length < 4) return;
 
         lineWidth = lineWidth || 1.5;
@@ -172,9 +172,15 @@ class OverlayRenderer {
         var y2 = bbox2D[3] * sy;
 
         ctx.save();
+        if (solid) {
+            ctx.globalAlpha = 0.18;
+            ctx.fillStyle = color;
+            ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+            ctx.globalAlpha = 0.9;
+        }
         ctx.strokeStyle = color;
         ctx.lineWidth = lineWidth;
-        ctx.setLineDash([6, 4]);
+        ctx.setLineDash(solid ? [] : [6, 4]);
         ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
         ctx.restore();
     }
@@ -257,7 +263,11 @@ class OverlayRenderer {
 
             // Draw 2D box
             if (show2D && box.bbox2D) {
-                this.draw2DBox(box.bbox2D, color, isGT ? 1 : 1.5);
+                if (options.solidBox) {
+                    this.draw2DBox(box.bbox2D, color, 4, true);
+                } else {
+                    this.draw2DBox(box.bbox2D, color, isGT ? 1 : 1.5, false);
+                }
             }
 
             // Draw label

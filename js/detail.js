@@ -26,7 +26,7 @@ var detailState = {
     showLabels: true,
     show3D: true,
     show2D: false,
-    activeModels: new Set(['SAM3_3D', 'GDino3D', 'DetAny3D', 'OVMono3D']),
+    activeModels: new Set(['SAM3_3D', 'DetAny3D', 'OVMono3D']),
     matchedPreds: {},
     bevElev: 35
 };
@@ -362,7 +362,7 @@ function filterPredsByGTMatch(preds, gtBoxes) {
             }
 
             var iou = computeIoU2D(pred2D, gtBox2D);
-            if (iou >= 0.5 && preds[p].score > bestScore) {
+            if (iou >= 0.2 && preds[p].score > bestScore) {
                 bestIdx = p;
                 bestScore = preds[p].score;
             }
@@ -437,13 +437,9 @@ function computeAllMatchedPreds(data) {
     for (var i = 0; i < models.length; i++) {
         var model = models[i];
         var preds = (data.predictions && data.predictions[model]) || [];
-        if (model === 'SAM3_3D') {
-            // Molmo3Det already has built-in duplicate filtering, use all preds
-            // but fix category names by matching to GT
-            detailState.matchedPreds[model] = assignGTCategories(preds, gt);
-        } else {
-            detailState.matchedPreds[model] = filterPredsByGTMatch(preds, gt);
-        }
+        // All models are box-prompted (oracle mode), no filtering needed
+        // Category names are correct from data preparation
+        detailState.matchedPreds[model] = preds;
     }
 }
 
@@ -458,7 +454,16 @@ async function renderAll() {
     // Load the shared image
     var img = await loadSharedImage(data.file_path);
 
-    // Initialize overlay renderer for GT panel
+    // Initialize overlay renderer for GT 2D prompt panel
+    var gt2dCanvas = document.getElementById('canvas-GT-2D');
+    if (gt2dCanvas) {
+        var gt2dRenderer = new OverlayRenderer('canvas-GT-2D');
+        gt2dRenderer.image = img;
+        gt2dRenderer._resizeCanvas();
+        detailState.renderers['GT-2D'] = gt2dRenderer;
+    }
+
+    // Initialize overlay renderer for GT 3D panel
     var gtCanvas = document.getElementById('canvas-GT');
     if (gtCanvas) {
         var gtRenderer = new OverlayRenderer('canvas-GT');
@@ -500,7 +505,10 @@ function rerenderAllCards() {
 
     computeAllMatchedPreds(data);
 
-    // Render GT-only panel
+    // Render GT 2D prompts panel
+    renderGT2DCard(data);
+
+    // Render GT 3D panel
     renderGTCard(data);
 
     var models = CONFIG.MODELS;
@@ -509,6 +517,28 @@ function rerenderAllCards() {
     }
 
     renderAllBEVs(data);
+}
+
+function renderGT2DCard(data) {
+    var renderer = detailState.renderers['GT-2D'];
+    if (!renderer || !detailState.loadedImage) return;
+
+    renderer.clear();
+
+    if (data.gt && data.gt.length > 0) {
+        renderer.renderBoxes(data.gt, MODEL_COLORS.GT, {
+            show3D: false,
+            show2D: true,
+            showLabels: detailState.showLabels,
+            isGT: true,
+            solidBox: true
+        });
+    }
+
+    var countEl = document.getElementById('count-GT-2D');
+    if (countEl) {
+        countEl.textContent = (data.gt ? data.gt.length : 0) + ' prompts';
+    }
 }
 
 function renderGTCard(data) {
@@ -780,6 +810,62 @@ function downloadCard(key) {
     var overlayH = DL_SIZE;
     var overlayW = Math.round(img.naturalWidth / img.naturalHeight * DL_SIZE);
 
+    // GT-2D: overlay only (no BEV)
+    if (key === 'GT-2D') {
+        var outCanvas = document.createElement('canvas');
+        outCanvas.width = overlayW;
+        outCanvas.height = overlayH;
+        var outCtx = outCanvas.getContext('2d');
+        outCtx.fillStyle = '#0f172a';
+        outCtx.fillRect(0, 0, overlayW, overlayH);
+        outCtx.drawImage(img, 0, 0, overlayW, overlayH);
+
+        var sx = overlayW / img.naturalWidth;
+        var sy = overlayH / img.naturalHeight;
+        var gtBoxes = data.gt || [];
+        var color = CONFIG.MODEL_COLORS.GT;
+
+        for (var b = 0; b < gtBoxes.length; b++) {
+            var box = gtBoxes[b];
+            if (!box.bbox2D || box.bbox2D.length < 4) continue;
+            var x1 = box.bbox2D[0] * sx;
+            var y1 = box.bbox2D[1] * sy;
+            var x2 = box.bbox2D[2] * sx;
+            var y2 = box.bbox2D[3] * sy;
+            // Shaded fill
+            outCtx.globalAlpha = 0.18;
+            outCtx.fillStyle = color;
+            outCtx.fillRect(x1, y1, x2 - x1, y2 - y1);
+            // Solid stroke
+            outCtx.globalAlpha = 0.9;
+            outCtx.strokeStyle = color;
+            outCtx.lineWidth = 4;
+            outCtx.setLineDash([]);
+            outCtx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            outCtx.globalAlpha = 1.0;
+            // Label
+            if (detailState.showLabels && box.category) {
+                outCtx.font = '12px Inter, Arial, sans-serif';
+                var tw = outCtx.measureText(box.category).width;
+                var pad = 4;
+                outCtx.globalAlpha = 0.85;
+                outCtx.fillStyle = color;
+                outCtx.fillRect(x1, y1 - 20, tw + pad * 2, 18);
+                outCtx.globalAlpha = 1.0;
+                outCtx.fillStyle = '#ffffff';
+                outCtx.textBaseline = 'top';
+                outCtx.fillText(box.category, x1 + pad, y1 - 17);
+            }
+        }
+
+        var imageId = detailState.imageData.image_id;
+        var link = document.createElement('a');
+        link.download = imageId + '_2D_prompts.png';
+        link.href = outCanvas.toDataURL('image/png');
+        link.click();
+        return;
+    }
+
     var outCanvas = document.createElement('canvas');
     outCanvas.width = overlayW + DL_SIZE;
     outCanvas.height = DL_SIZE;
@@ -843,9 +929,9 @@ function downloadCard(key) {
 
     // Download
     var dlNames = {
+        'GT-2D': '2D_prompts',
         GT: 'GT',
-        SAM3_3D: 'Molmo3Det',
-        GDino3D: '3DMOOD',
+        SAM3_3D: 'WildDet3D',
         DetAny3D: 'DetAny3D',
         OVMono3D: 'OVMono3D'
     };

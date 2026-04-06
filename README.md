@@ -1,21 +1,20 @@
-# 3D Detection Model Comparison Visualization
+# 3D Detection Model Comparison - InTheWild Box Prompts
 
-Side-by-side comparison of 4 models on InTheWild v3 benchmark: **SAM3_3D**, **GDino3D**, **DetAny3D**, **OVMono3D**.
+Side-by-side comparison of 3 models on InTheWild benchmark using **2D GT box prompts** to obtain 3D box predictions: **WildDet3D (Ours)**, **DetAny3D**, **OVMono3D**.
 
-Each image produces a 2x2 grid where each cell = **image overlay** (left) + **45-degree BEV** (right).
+Each image shows a GT row (full width) + 1x3 model grid, where each cell = **image overlay** (left) + **perspective BEV** (right).
 
 ## Files
 
 | File | Description |
 |---|---|
-| `prepare_demo_data.py` | Merge GT + 4 models' predictions into `demo_data.json` |
+| `prepare_demo_data.py` | Merge GT + 3 models' predictions into `demo_data.json` |
 | `render_comparison.py` | Render static comparison images (image overlay + 3D BEV) |
-| `demo_data.json` | Pre-merged data (200 images, ~13 MB) |
+| `demo_data.json` | Pre-merged data (~13 MB) |
 | `comparison_renders/` | Output PNG images |
-| `index.html` / `image.html` | Interactive web viewer (separate from static renders) |
-| `js/bev-renderer.js` | JS top-down BEV renderer (for web viewer) |
-| `js/overlay-renderer.js` | JS image overlay renderer (for web viewer) |
-| `js/three-viewer.js` | JS Three.js 3D perspective viewer (for web viewer) |
+| `index.html` / `image.html` | Interactive web viewer |
+| `js/bev-renderer.js` | JS perspective BEV renderer |
+| `js/overlay-renderer.js` | JS image overlay renderer |
 
 ## Quick Start
 
@@ -34,87 +33,64 @@ Output goes to `comparison_renders/`.
 
 ## Prediction Filtering
 
-Predictions are matched to GT boxes using the same logic as the web interface (`detail.js: filterPredsByGTMatch`):
-
-1. For each GT box, compute 2D IoU between GT `bbox2D` and each prediction's `bbox3D_proj` (projected to axis-aligned rect).
-2. Keep the highest-scoring prediction with IoU >= 0.5.
-3. Each GT keeps at most 1 matched prediction.
-
-This ensures only meaningful predictions (those overlapping with a GT object) are shown, keeping the visualization clean.
-
-## Image Selection Criteria
-
-By default, `render_comparison.py` selects:
-- **COCO images only** (not Objects365)
-- **All 4 models must have >= 1 matched detection** on the image
-
-This ensures every rendered comparison is informative (no empty panels).
+- **WildDet3D**: No filtering applied (oracle/box-prompt mode produces one output per GT prompt, no duplicates).
+- **DetAny3D, OVMono3D**: Predictions matched to GT boxes using IoU >= 0.2. For each GT box, the highest-scoring prediction with sufficient overlap is kept (at most 1 per GT).
 
 ## BEV Rendering
 
 The BEV panel uses **manual 3D perspective projection** (no GPU required):
 
 - **Coordinate system**: OpenCV camera coords (X=right, Y=down, Z=forward) converted to display coords (X=right, Y=up, Z=backward) via `(x, -y, -z)`.
-- **Camera**: 35-degree elevation, looking straight forward (azimuth=0), distance auto-scaled to fit all boxes.
-- **3D box corners**: Uses `bbox3D_cam` (8 rotated corner points from annotations) when available, falls back to axis-aligned boxes from `center_cam` + `dimensions`.
-- **Rendering**: Painter's algorithm (depth-sorted), semi-transparent faces + wireframe edges.
-- **Ground grid**: Auto-scaled to scene extent.
+- **Camera**: Configurable elevation (default 35 degrees), distance auto-scaled to fit all boxes.
+- **Smart zoom**: Focal length auto-computed to tightly frame all boxes with minimal whitespace.
+- **3D box corners**: Uses `bbox3D_cam` (8 rotated corner points) when available, falls back to axis-aligned boxes from `center_cam` + `dimensions`.
+- **Rendering**: Painter's algorithm (depth-sorted), semi-transparent faces + wireframe edges + category labels.
+- **Ground grid**: Fixed at 35-degree elevation regardless of box camera angle.
 
-## Data Format (`demo_data.json`)
+## Data Format
 
 ```json
-[
-  {
-    "image_id": 123,
-    "file_path": "images/coco_val/000000000724.jpg",
-    "width": 375,
-    "height": 500,
-    "K": [[fx, 0, cx], [0, fy, cy], [0, 0, 1]],
-    "gt": [
-      {
-        "category": "stop sign",
-        "bbox2D": [x1, y1, x2, y2],
-        "center_cam": [cx, cy, cz],
-        "dimensions": [W, H, L],
-        "bbox3D_cam": [[x,y,z], ...],  // 8 corners in camera coords
-        "bbox3D_proj": [[u,v], ...]    // 8 corners projected to 2D
-      }
-    ],
-    "predictions": {
-      "SAM3_3D": [
-        {
-          "category": "stop sign",
-          "score": 1.2,
-          "bbox2D": [x, y, w, h],
-          "center_cam": [cx, cy, cz],
-          "dimensions": [W, H, L],
-          "bbox3D_cam": [[x,y,z], ...],  // 8 corners (if available)
-          "bbox3D_proj": [[u,v], ...]
-        }
-      ],
-      "GDino3D": [...],
-      "DetAny3D": [...],
-      "OVMono3D": [...]
+{
+  "image_id": 123,
+  "file_path": "images/coco_val/000000000724.jpg",
+  "width": 375, "height": 500,
+  "K": [[fx, 0, cx], [0, fy, cy], [0, 0, 1]],
+  "gt": [
+    {
+      "category": "stop sign",
+      "bbox2D": [x1, y1, x2, y2],
+      "center_cam": [cx, cy, cz],
+      "dimensions": [W, H, L],
+      "bbox3D_cam": [[x,y,z], ...],
+      "bbox3D_proj": [[u,v], ...]
     }
+  ],
+  "predictions": {
+    "SAM3_3D": [...],
+    "DetAny3D": [...],
+    "OVMono3D": [...]
   }
-]
+}
 ```
 
 ## Prediction Sources
 
 | Model | Prediction Path |
 |---|---|
-| SAM3_3D | `vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_v3/2026-03-23_00-57-13/eval/detection_bbox/3D/detect_3D_results.json` |
-| GDino3D | `vis4d-workspace/gdino3d_swin-t_in_the_wild_v3/2026-03-23_00-51-40/eval/detection_bbox/3D/detect_3D_results.json` |
-| DetAny3D | `DetAny3D/exps/in_the_wild_v3_eval/0323-003209/in_the_wild_in_the_wild_v3_predictions.json` |
-| OVMono3D | `output/ovmono3d_itw_v3_predictions.json` |
+| WildDet3D | `vis4d-workspace/sam3_3d_lingbot_depth_freeze21_in_the_wild_oracle_v3/2026-03-23_21-02-01/eval/detection_bbox/3D/detect_3D_results.json` |
+| DetAny3D | `DetAny3D/exps/in_the_wild_v3_eval/0405-121148/in_the_wild_in_the_wild_v3_predictions.json` |
+| OVMono3D | `output/ovmono3d_itw_v3_oracle_predictions.json` |
 
 ## Color Scheme
 
-| Element | Color (BGR) | Hex |
-|---|---|---|
-| SAM3_3D | (55, 76, 231) | `#e74c3c` |
-| GDino3D | (246, 130, 59) | `#3b82f6` |
-| DetAny3D | (85, 197, 34) | `#22c55e` |
-| OVMono3D | (22, 115, 249) | `#f97316` |
-| GT | (247, 85, 168) | `#a855f7` |
+| Element | Hex |
+|---|---|
+| WildDet3D | `#e74c3c` |
+| DetAny3D | `#22c55e` |
+| OVMono3D | `#f97316` |
+| GT | `#a855f7` |
+
+## Hosting
+
+- **Code**: GitHub Pages at [Silicon23/WildDet3D-model-comparison-demo](https://github.com/Silicon23/WildDet3D-model-comparison-demo)
+- **Data + Images**: HuggingFace at [Silicon23/WildDet3D-demo](https://huggingface.co/datasets/Silicon23/WildDet3D-demo) (under `model/`)

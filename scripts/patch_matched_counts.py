@@ -2,13 +2,13 @@
 """Patch index.json to add GT-matched prediction counts per model.
 
 For each image, computes how many predictions per model match a GT box
-(2D IoU >= 0.5 between projected 3D box and GT bbox2D, best-score wins).
+(2D IoU >= 0.2 between projected 3D box and GT bbox2D, best-score wins).
 """
 
 import json
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "box"
 
 
 def compute_iou_2d(box_a, box_b):
@@ -48,7 +48,7 @@ def count_matched_preds(preds, gt_boxes):
             else:
                 continue
             iou = compute_iou_2d(pred_2d, gt_2d)
-            if iou >= 0.5 and pred.get("score", 0) > best_score:
+            if iou >= 0.2 and pred.get("score", 0) > best_score:
                 best_idx = i
                 best_score = pred["score"]
         if best_idx >= 0:
@@ -74,11 +74,8 @@ def main():
         matched_counts = {}
         for model in models:
             preds = img_data.get("predictions", {}).get(model, [])
-            if model == "SAM3_3D":
-                # Molmo3Det already has built-in duplicate filtering
-                matched_counts[model] = len(preds)
-            else:
-                matched_counts[model] = count_matched_preds(preds, gt)
+            # All models are box-prompted (oracle mode), no filtering needed
+            matched_counts[model] = len(preds)
         img_entry["matched_counts"] = matched_counts
 
         if (i + 1) % 500 == 0:
