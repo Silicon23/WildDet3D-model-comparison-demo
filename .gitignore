@@ -10,6 +10,11 @@ demo_data.json
 # Rendered outputs
 comparison_renders/
 
+# Data prep scripts (not part of web viewer)
+prepare_demo_data.py
+render_comparison.py
+nohup.out
+
 # Server logs
 server.log
 *.log

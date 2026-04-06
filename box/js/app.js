@@ -9,13 +9,19 @@
 // Configuration
 // ============================================================================
 
+var _isLocal = window.location.hostname === 'localhost' ||
+               window.location.hostname === '127.0.0.1' ||
+               window.location.hostname === '' ||
+               window.location.hostname.endsWith('.trycloudflare.com') ||
+               window.location.protocol === 'file:';
+
 const CONFIG = {
-    DATA_BASE: window.location.hostname.endsWith('github.io')
-        ? 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/box'
-        : 'data/box',
-    IMAGE_BASE: window.location.hostname.endsWith('github.io')
-        ? 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/'
-        : '',
+    DATA_BASE: _isLocal
+        ? '../data/box'
+        : 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/box',
+    IMAGE_BASE: _isLocal
+        ? '../'
+        : 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/',
     IMAGES_PER_PAGE: 24,
     MODELS: ['SAM3_3D', 'DetAny3D', 'OVMono3D'],
     MODEL_DISPLAY: {
