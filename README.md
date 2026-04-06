@@ -90,7 +90,19 @@ The BEV panel uses **manual 3D perspective projection** (no GPU required):
 | OVMono3D | `#f97316` |
 | GT | `#a855f7` |
 
+## Text-Prompted Comparison
+
+A separate text-prompted comparison viewer lives under [`text/`](text/). It compares **WildDet3D** and **GDino3D** using text category prompts instead of 2D GT box prompts. See [`text/README.md`](text/README.md) for details.
+
+Key differences from the box-prompted viewer at root:
+- Models: WildDet3D + GDino3D (text-prompted only)
+- Per-model confidence threshold sliders (no GT IoU matching)
+- Cross-category NMS (IoU > 0.8) for near-duplicate suppression
+- Category labels from the model's predicted text (not GT-relabeled)
+
 ## Hosting
 
 - **Code**: GitHub Pages at [Silicon23/WildDet3D-model-comparison-demo](https://github.com/Silicon23/WildDet3D-model-comparison-demo)
+  - Box-prompted viewer: `/` (root)
+  - Text-prompted viewer: `/text/`
 - **Data + Images**: HuggingFace at [Silicon23/WildDet3D-demo](https://huggingface.co/datasets/Silicon23/WildDet3D-demo) (under `model/`)
