@@ -148,11 +148,33 @@ function initAllModelsFilter() {
 // Shuffle Toggle
 // ============================================================================
 
-function applyShuffle() {
+// Seeded PRNG (mulberry32) for reproducible shuffle within a session
+function seededRandom(seed) {
+    return function () {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+function getShuffleSeed(forceNew) {
+    var key = 'gallery_shuffle_seed';
+    if (!forceNew) {
+        var stored = sessionStorage.getItem(key);
+        if (stored) return parseInt(stored);
+    }
+    var seed = Math.floor(Math.random() * 2147483647);
+    sessionStorage.setItem(key, seed);
+    return seed;
+}
+
+function applyShuffle(forceNewSeed) {
     if (galleryState.shuffleImages) {
         galleryState.images = galleryState.imagesOriginal.slice();
+        var rand = seededRandom(getShuffleSeed(forceNewSeed));
         for (var i = galleryState.images.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
+            var j = Math.floor(rand() * (i + 1));
             var tmp = galleryState.images[i];
             galleryState.images[i] = galleryState.images[j];
             galleryState.images[j] = tmp;
@@ -168,7 +190,7 @@ function initShuffleToggle() {
 
     checkbox.addEventListener('change', function () {
         galleryState.shuffleImages = checkbox.checked;
-        applyShuffle();
+        applyShuffle(true);
         galleryState.currentPage = 1;
         filterImages();
     });
