@@ -79,6 +79,9 @@ def main():
             matched_counts[model] = filter_and_nms(preds, thr)
         img_entry["matched_counts"] = matched_counts
 
+        # Copy prompt categories from per-image JSON (includes all 2D annotations)
+        img_entry["prompt_categories"] = img_data.get("prompt_categories", [])
+
         if (i + 1) % 500 == 0:
             print(f"  {i + 1}/{total}")
 

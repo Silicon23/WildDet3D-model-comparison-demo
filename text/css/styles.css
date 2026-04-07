@@ -435,6 +435,24 @@ button {
     text-overflow: ellipsis;
 }
 
+.card-prompts {
+    padding: 0 var(--spacing-md) var(--spacing-xs);
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.prompts-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.prompts-text {
+    color: var(--text-muted);
+}
+
 .card-models {
     display: flex;
     align-items: center;
@@ -865,10 +883,24 @@ button {
     overflow-y: auto;
 }
 
-/* GT card spans full width */
-.gt-card {
-    display: flex;
-    flex-direction: column;
+/* Prompts banner */
+.prompts-banner {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.prompts-banner-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.prompts-banner-text {
+    color: var(--text-secondary);
 }
 
 /* 2x2 grid for the 4 model cards */

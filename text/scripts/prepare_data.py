@@ -272,11 +272,21 @@ def main():
           f"id range: {min(pred_cat_id_to_name)} to "
           f"{max(pred_cat_id_to_name)}")
 
-    # GT by image
+    # GT by image (valid 3D only)
     gt_by_image = defaultdict(list)
     for ann in ann_data["annotations"]:
         if ann.get("valid3D", True) and not ann.get("behind_camera", False):
             gt_by_image[ann["image_id"]].append(ann)
+
+    # All annotation categories per image (including invalid 3D)
+    # These are the text prompts used by both models
+    all_cats_by_image = defaultdict(list)
+    for ann in ann_data["annotations"]:
+        cat_name = ann.get(
+            "category_name",
+            gt_cat_id_to_name.get(ann["category_id"], "?"),
+        )
+        all_cats_by_image[ann["image_id"]].append(cat_name)
 
     print(f"Images: {len(img_id_to_info)}, GT annotations: {sum(len(v) for v in gt_by_image.values())}")
 
@@ -392,6 +402,9 @@ def main():
             model_boxes[model_name] = boxes
             model_counts[model_name] = len(boxes)
 
+        # Unique prompt categories (from all 2D annotations, not just valid 3D)
+        prompt_cats = list(dict.fromkeys(all_cats_by_image.get(img_id, [])))
+
         # Write per-image JSON
         per_image = {
             "image_id": img_id,
@@ -400,6 +413,7 @@ def main():
             "height": img_info["height"],
             "K": K,
             "gt": gt_boxes,
+            "prompt_categories": prompt_cats,
             "predictions": model_boxes,
         }
         with open(OUTPUT_DIR / "images" / f"{img_id}.json", "w") as f:

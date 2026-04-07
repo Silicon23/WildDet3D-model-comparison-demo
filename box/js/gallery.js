@@ -37,6 +37,8 @@ async function initGallery() {
     galleryState.images = galleryState.index.images.filter(function (img) {
         if (img.gt_count <= 0) return false;
         var mc = img.matched_counts || img.model_counts || {};
+        // Exclude images with no WildDet3D detections
+        if (!mc.SAM3_3D || mc.SAM3_3D <= 0) return false;
         var total = 0;
         for (var k in mc) total += mc[k];
         return total > 0;
@@ -72,10 +74,16 @@ function updateStats() {
     var statTotal = document.getElementById('stat-total');
     var statFiltered = document.getElementById('stat-with-dets');
     var statScenes = document.getElementById('stat-categories');
+    var statLabel = document.getElementById('stat-with-dets-label');
 
     if (statTotal) statTotal.textContent = total.toLocaleString();
     if (statFiltered) statFiltered.textContent = filtered.toLocaleString();
     if (statScenes) statScenes.textContent = scenes.toLocaleString();
+    if (statLabel) {
+        statLabel.innerHTML = galleryState.requireAllModels
+            ? 'With Detection(s)<br>From All Models'
+            : 'With GT 3D Box(es)<br><span style="visibility:hidden">From All Models</span>';
+    }
 }
 
 // ============================================================================
@@ -202,7 +210,7 @@ function filterImages() {
         });
     }
 
-    // Filter: all 4 models must have >= 1 matched detection
+    // Filter: all models must have >= 1 detection
     if (galleryState.requireAllModels) {
         var models = CONFIG.MODELS;
         filtered = filtered.filter(function (img) {

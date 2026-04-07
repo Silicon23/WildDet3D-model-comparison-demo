@@ -72,10 +72,16 @@ function updateStats() {
     var statTotal = document.getElementById('stat-total');
     var statFiltered = document.getElementById('stat-with-dets');
     var statScenes = document.getElementById('stat-categories');
+    var statLabel = document.getElementById('stat-with-dets-label');
 
     if (statTotal) statTotal.textContent = total.toLocaleString();
     if (statFiltered) statFiltered.textContent = filtered.toLocaleString();
     if (statScenes) statScenes.textContent = scenes.toLocaleString();
+    if (statLabel) {
+        statLabel.innerHTML = galleryState.requireAllModels
+            ? 'With Detection(s)<br>From Both Models'
+            : 'With Detection(s)<br>From Either Model';
+    }
 }
 
 // ============================================================================
@@ -202,7 +208,7 @@ function filterImages() {
         });
     }
 
-    // Filter: all 4 models must have >= 1 matched detection
+    // Filter: both models must have >= 1 detection
     if (galleryState.requireAllModels) {
         var models = CONFIG.MODELS;
         filtered = filtered.filter(function (img) {
@@ -247,14 +253,22 @@ function renderImageGrid() {
         var source = img.source || 'unknown';
         var formattedId = img.formatted_id || String(img.id);
 
+        var promptCats = img.prompt_categories || [];
+        var promptsText = promptCats.join(', ');
+
         return (
             '<div class="image-card" onclick="openImage(' + img.id + ')">' +
                 '<div class="card-thumb">' +
-                    '<canvas id="thumb-' + img.id + '"></canvas>' +
+                    '<img src="' + getImageUrl(img.file_path) + '" ' +
+                        'loading="lazy" alt="Image ' + img.id + '">' +
                 '</div>' +
                 '<div class="card-info">' +
                     '<span class="card-id">' + formattedId + '</span>' +
                     '<span class="badge badge-' + source + '">' + source + '</span>' +
+                '</div>' +
+                '<div class="card-prompts" title="' + promptsText + '">' +
+                    '<span class="prompts-label">Prompts:</span> ' +
+                    '<span class="prompts-text">' + promptsText + '</span>' +
                 '</div>' +
                 '<div class="card-models">' + modelPills + '</div>' +
             '</div>'
@@ -262,7 +276,6 @@ function renderImageGrid() {
     }).join('');
 
     renderPagination(totalPages);
-    renderThumbnailOverlays(pageImages);
 }
 
 // ============================================================================

@@ -7,7 +7,7 @@ Interactive side-by-side comparison of 3D object detection models on the InTheWi
 | Viewer | Path | Models | Prompting |
 |---|---|---|---|
 | [Box Prompts](box/) | `/box/` | WildDet3D, DetAny3D, OVMono3D | GT 2D bounding boxes |
-| [Text Prompts](text/) | `/text/` | WildDet3D, GDino3D | Category text |
+| [Text Prompts](text/) | `/text/` | WildDet3D, 3D-MOOD | Category text |
 
 ## Structure
 

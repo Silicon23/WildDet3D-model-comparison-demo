@@ -638,6 +638,29 @@ button {
 }
 
 /* ============================================================================
+   Disclaimer Banner
+   ============================================================================ */
+
+.disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.disclaimer svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #3b82f6;
+}
+
+/* ============================================================================
    Controls Bar
    ============================================================================ */
 

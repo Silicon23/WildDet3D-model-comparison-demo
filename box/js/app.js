@@ -36,9 +36,9 @@ const CONFIG = {
         GT: '#a855f7',
     },
     MODEL_SHORT: {
-        SAM3_3D: 'W',
-        DetAny3D: 'D',
-        OVMono3D: 'O',
+        SAM3_3D: 'WildDet3D',
+        DetAny3D: 'DetAny3D',
+        OVMono3D: 'OVMono3D',
     },
     SOURCE_COLORS: {
         coco_val: '#3b82f6',

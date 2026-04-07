@@ -33,7 +33,7 @@ const CONFIG = {
     MODELS: ['SAM3_3D', 'GDino3D'],
     MODEL_DISPLAY: {
         SAM3_3D: 'WildDet3D (Ours)',
-        GDino3D: 'GDino3D (3D-MOOD)',
+        GDino3D: '3D-MOOD',
     },
     MODEL_COLORS: {
         SAM3_3D: '#e74c3c',
@@ -41,8 +41,8 @@ const CONFIG = {
         GT: '#a855f7',
     },
     MODEL_SHORT: {
-        SAM3_3D: 'M',
-        GDino3D: 'G',
+        SAM3_3D: 'WildDet3D',
+        GDino3D: '3D-MOOD',
     },
     SOURCE_COLORS: {
         coco_val: '#3b82f6',

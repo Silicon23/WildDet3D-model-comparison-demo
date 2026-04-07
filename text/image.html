@@ -52,10 +52,6 @@
         <div class="controls-bar">
             <div class="control-group">
                 <label class="control-checkbox">
-                    <input type="checkbox" id="show-gt">
-                    <span>Show GT Overlay</span>
-                </label>
-                <label class="control-checkbox">
                     <input type="checkbox" id="show-labels" checked>
                     <span>Show Labels</span>
                 </label>
@@ -83,31 +79,21 @@
                 <span class="thr-display" id="thr-WildDet3D-display">0.50</span>
             </div>
             <div class="control-group thr-group">
-                <label class="control-label" style="color:#3b82f6;">GDino3D threshold:</label>
-                <input type="range" id="thr-GDino3D" min="0.05" max="0.95" value="0.1" step="0.05">
-                <span class="thr-display" id="thr-GDino3D-display">0.10</span>
+                <label class="control-label" style="color:#3b82f6;">3D-MOOD threshold:</label>
+                <input type="range" id="thr-3D-MOOD" min="0.05" max="0.95" value="0.1" step="0.05">
+                <span class="thr-display" id="thr-3D-MOOD-display">0.10</span>
             </div>
 
         </div>
 
-        <!-- Row 1: GT (overlay + BEV side by side, full width) -->
         <main class="comparison-layout">
-            <div class="model-card gt-card" id="panel-GT">
-                <div class="model-card-header">
-                    <span class="model-dot" style="background: #a855f7;"></span>
-                    <span class="model-name">Ground Truth</span>
-                    <span class="det-count" id="count-GT">-</span>
-                    <button class="download-btn" onclick="downloadCard('GT')" title="Download 1200x600">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </button>
-                </div>
-                <div class="dual-canvas">
-                    <div class="canvas-wrap"><canvas id="canvas-GT"></canvas></div>
-                    <div class="canvas-wrap bev-wrap"><canvas id="bev-GT"></canvas></div>
-                </div>
+            <!-- Prompts banner -->
+            <div class="prompts-banner" id="prompts-banner">
+                <span class="prompts-banner-label">Prompts:</span>
+                <span class="prompts-banner-text" id="prompts-text">-</span>
             </div>
 
-            <!-- Row 2: 2x2 grid, each cell = overlay + BEV -->
+            <!-- Model grid, each cell = overlay + BEV -->
             <div class="models-grid">
                 <div class="model-card featured" id="panel-SAM3_3D">
                     <div class="model-card-header">
@@ -127,7 +113,7 @@
                 <div class="model-card" id="panel-GDino3D">
                     <div class="model-card-header">
                         <span class="model-dot" style="background: #3b82f6;"></span>
-                        <span class="model-name">GDino3D (3D-MOOD)</span>
+                        <span class="model-name">3D-MOOD</span>
                         <span class="det-count" id="count-GDino3D">-</span>
                         <button class="download-btn" onclick="downloadCard('GDino3D')" title="Download 1200x600">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

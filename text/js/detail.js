@@ -229,7 +229,7 @@ function setupControls() {
     // Per-model confidence-threshold sliders.
     // Slider HTML ids use display names (e.g. thr-WildDet3D) while
     // internal keys use CONFIG.MODELS (e.g. SAM3_3D).
-    var SLIDER_IDS = { SAM3_3D: 'WildDet3D', GDino3D: 'GDino3D' };
+    var SLIDER_IDS = { SAM3_3D: 'WildDet3D', GDino3D: '3D-MOOD' };
     var models = CONFIG.MODELS;
     for (var mi = 0; mi < models.length; mi++) {
         (function (model) {
@@ -443,15 +443,6 @@ async function renderAll() {
     // Load the shared image
     var img = await loadSharedImage(data.file_path);
 
-    // Initialize overlay renderer for GT panel
-    var gtCanvas = document.getElementById('canvas-GT');
-    if (gtCanvas) {
-        var gtRenderer = new OverlayRenderer('canvas-GT');
-        gtRenderer.image = img;
-        gtRenderer._resizeCanvas();
-        detailState.renderers['GT'] = gtRenderer;
-    }
-
     // Initialize overlay renderers for each model panel
     var models = CONFIG.MODELS;
     for (var i = 0; i < models.length; i++) {
@@ -467,7 +458,7 @@ async function renderAll() {
     }
 
     // Initialize BEV renderers for GT and each model
-    var bevIds = ['GT'].concat(CONFIG.MODELS);
+    var bevIds = CONFIG.MODELS;
     for (var i = 0; i < bevIds.length; i++) {
         var bevCanvasId = 'bev-' + bevIds[i];
         var bevCanvas = document.getElementById(bevCanvasId);
@@ -485,8 +476,8 @@ function rerenderAllCards() {
 
     computeFilteredPreds(data);
 
-    // Render GT-only panel
-    renderGTCard(data);
+    // Update prompts text
+    updatePromptsText(data);
 
     var models = CONFIG.MODELS;
     for (var i = 0; i < models.length; i++) {
@@ -496,25 +487,11 @@ function rerenderAllCards() {
     renderAllBEVs(data);
 }
 
-function renderGTCard(data) {
-    var renderer = detailState.renderers['GT'];
-    if (!renderer || !detailState.loadedImage) return;
-
-    renderer.clear();
-
-    if (data.gt && data.gt.length > 0) {
-        renderer.renderBoxes(data.gt, MODEL_COLORS.GT, {
-            show3D: detailState.show3D,
-            show2D: detailState.show2D,
-            showLabels: detailState.showLabels,
-            isGT: true
-        });
-    }
-
-    var countEl = document.getElementById('count-GT');
-    if (countEl) {
-        countEl.textContent = (data.gt ? data.gt.length : 0) + ' boxes';
-    }
+function updatePromptsText(data) {
+    var el = document.getElementById('prompts-text');
+    if (!el) return;
+    var cats = data.prompt_categories || [];
+    el.textContent = cats.length > 0 ? cats.join(', ') : 'none';
 }
 
 function renderModelCard(modelName, data) {
@@ -731,12 +708,6 @@ function renderAllBEVs(data) {
     var showLabels = detailState.showLabels;
     var showConf = detailState.showConfidence;
 
-    // GT BEV (no confidence)
-    var gtBev = detailState.bevRenderers['GT'];
-    if (gtBev && data.gt) {
-        gtBev.render(data.gt, CONFIG.MODEL_COLORS.GT, elev, showLabels, false);
-    }
-
     // Model BEVs
     var models = CONFIG.MODELS;
     for (var i = 0; i < models.length; i++) {
@@ -834,7 +805,7 @@ function downloadCard(key) {
     var dlNames = {
         GT: 'GT',
         SAM3_3D: 'WildDet3D',
-        GDino3D: '3DMOOD',
+        GDino3D: '3D-MOOD',
         DetAny3D: 'DetAny3D',
         OVMono3D: 'OVMono3D'
     };
