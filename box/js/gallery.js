@@ -37,8 +37,8 @@ async function initGallery() {
     galleryState.images = galleryState.index.images.filter(function (img) {
         if (img.gt_count <= 0) return false;
         var mc = img.matched_counts || img.model_counts || {};
-        // Exclude images with no WildDet3D detections
-        if (!mc.SAM3_3D || mc.SAM3_3D <= 0) return false;
+        // Exclude images where WildDet3D has fewer detections than GT
+        if (!mc.SAM3_3D || mc.SAM3_3D < img.gt_count) return false;
         var total = 0;
         for (var k in mc) total += mc[k];
         return total > 0;
