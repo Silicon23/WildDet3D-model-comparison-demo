@@ -547,6 +547,11 @@ button {
 }
 
 /* Back Link */
+.header-spacer {
+    width: 100px;
+    flex-shrink: 0;
+}
+
 .back-link {
     display: flex;
     align-items: center;
