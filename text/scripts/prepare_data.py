@@ -332,6 +332,9 @@ def main():
         scene_path = scene_lookup.get(
             (dataset, numeric_id), "unclassified"
         )
+        # Remap scene categories
+        if scene_path == "indoor/office":
+            scene_path = "indoor/public_space/office"
         all_scene_paths.append(scene_path)
 
         # GT boxes

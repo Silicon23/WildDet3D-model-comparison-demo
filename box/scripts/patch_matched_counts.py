@@ -8,7 +8,7 @@ For each image, computes how many predictions per model match a GT box
 import json
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.parent / "data" / "box"
+DATA_DIR = Path(__file__).parent.parent.parent / "data" / "box"
 
 
 def compute_iou_2d(box_a, box_b):

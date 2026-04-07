@@ -31,7 +31,7 @@ images/                 Symlink to extracted images (gitignored)
   - Landing page: `/`
   - Box-prompted viewer: `/box/`
   - Text-prompted viewer: `/text/`
-- **Data + Images**: HuggingFace at [Silicon23/WildDet3D-demo](https://huggingface.co/datasets/Silicon23/WildDet3D-demo) (under `model/`)
+- **Data + Images**: HuggingFace at [allenai/WildDet3D-visualization-source](https://huggingface.co/datasets/allenai/WildDet3D-visualization-source) (under `model/`)
 
 ## Local Development
 

@@ -23,10 +23,10 @@ var _isLocal = window.location.hostname === 'localhost' ||
 const CONFIG = {
     DATA_BASE: _isLocal
         ? '../data/text'
-        : 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/text',
+        : 'https://huggingface.co/datasets/allenai/WildDet3D-visualization-source/resolve/main/model/text',
     IMAGE_BASE: _isLocal
         ? '../'
-        : 'https://huggingface.co/datasets/Silicon23/WildDet3D-demo/resolve/main/model/',
+        : 'https://huggingface.co/datasets/allenai/WildDet3D-visualization-source/resolve/main/model/',
     IMAGES_PER_PAGE: 24,
     // Text-based branch: only text-prompted 3D detectors are compared.
     // DetAny3D and OVMono3D were excluded because they use 2D box prompts.
