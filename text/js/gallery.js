@@ -14,11 +14,13 @@
 
 var galleryState = {
     images: [],
+    imagesOriginal: [],
     filteredImages: [],
     currentPage: 1,
     selectedScene: null,
     datasetFilter: 'all',
     requireAllModels: false,
+    shuffleImages: true,
     searchQuery: '',
     index: null,
     sceneTree: null
@@ -34,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function initGallery() {
     galleryState.index = await loadIndex();
-    galleryState.images = galleryState.index.images.filter(function (img) {
+    galleryState.imagesOriginal = galleryState.index.images.filter(function (img) {
         if (img.gt_count <= 0) return false;
         var mc = img.matched_counts || img.model_counts || {};
         var total = 0;
@@ -42,20 +44,14 @@ async function initGallery() {
         return total > 0;
     });
 
-    // Shuffle using Fisher-Yates
-    for (var i = galleryState.images.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = galleryState.images[i];
-        galleryState.images[i] = galleryState.images[j];
-        galleryState.images[j] = tmp;
-    }
-
+    applyShuffle();
     galleryState.filteredImages = galleryState.images.slice();
 
     updateStats();
     initSceneTree();
     initDatasetFilter();
     initAllModelsFilter();
+    initShuffleToggle();
     initSearch();
     renderImageGrid();
 }
@@ -143,6 +139,36 @@ function initAllModelsFilter() {
 
     checkbox.addEventListener('change', function () {
         galleryState.requireAllModels = checkbox.checked;
+        galleryState.currentPage = 1;
+        filterImages();
+    });
+}
+
+// ============================================================================
+// Shuffle Toggle
+// ============================================================================
+
+function applyShuffle() {
+    if (galleryState.shuffleImages) {
+        galleryState.images = galleryState.imagesOriginal.slice();
+        for (var i = galleryState.images.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = galleryState.images[i];
+            galleryState.images[i] = galleryState.images[j];
+            galleryState.images[j] = tmp;
+        }
+    } else {
+        galleryState.images = galleryState.imagesOriginal.slice();
+    }
+}
+
+function initShuffleToggle() {
+    var checkbox = document.getElementById('shuffle-images');
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', function () {
+        galleryState.shuffleImages = checkbox.checked;
+        applyShuffle();
         galleryState.currentPage = 1;
         filterImages();
     });
