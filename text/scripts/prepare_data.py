@@ -96,37 +96,42 @@ MODELS = ["SAM3_3D", "GDino3D"]
 def load_model_id_to_name(config_yaml_path):
     """Extract {category_id: name} from an eval config's embedded cat_map.
 
-    The vis4d config YAML contains a `cat_map` block with
-    `<name>: <id>` entries that covers the full 800+ ITW vocab used
-    when the predictions were generated. This is the authoritative
-    mapping for the saved category_id values.
-
-    The same cat_map appears multiple times in the config; we take the
-    union across all occurrences (they should be identical).
+    Parses only lines inside the first `cat_map: ... _fields:` block,
+    stopping when indentation decreases (e.g. at `_locked:`).
     """
     with open(config_yaml_path) as f:
-        content = f.read()
+        lines = f.readlines()
 
-    # Collect every <indent><name>: <int> line; category-name lines are
-    # deeply indented (18+ spaces). Names may be quoted (e.g. 'tissue ')
-    # when they contain whitespace or special chars. The vocab has IDs
-    # up to ~800.
     name_to_id = {}
-    plain_pat = re.compile(
-        r"^(\s{18,})([A-Za-z][\w \-/,.()]+): (\d+)\s*$"
-    )
-    quoted_pat = re.compile(
-        r"^(\s{18,})'([^']+)': (\d+)\s*$"
-    )
-    for line in content.split("\n"):
-        m = quoted_pat.match(line) or plain_pat.match(line)
+    in_catmap = False
+    fields_indent = None
+    entry_pat = re.compile(r"^(\s+)([A-Za-z][\w \-/,.()]+): (\d+)\s*$")
+    quoted_pat = re.compile(r"^(\s+)'([^']+)': (\d+)\s*$")
+
+    for line in lines:
+        stripped = line.rstrip()
+        if not in_catmap:
+            if "cat_map:" in stripped and "ConfigDict" in stripped:
+                in_catmap = True
+            continue
+
+        # Wait for _fields: line
+        if fields_indent is None:
+            if "_fields:" in stripped:
+                fields_indent = len(stripped) - len(stripped.lstrip())
+            continue
+
+        # Check if we've left the _fields block
+        cur_indent = len(line) - len(line.lstrip())
+        if stripped and cur_indent <= fields_indent and "_fields" not in stripped:
+            break
+
+        m = quoted_pat.match(line) or entry_pat.match(line)
         if m:
             name = m.group(2)
             val = int(m.group(3))
-            # Skip non-category values (indices into arrays, etc.)
-            if val > 2000:
+            if val > 800:
                 continue
-            # First occurrence wins (all occurrences should match)
             if name not in name_to_id:
                 name_to_id[name] = val
 
